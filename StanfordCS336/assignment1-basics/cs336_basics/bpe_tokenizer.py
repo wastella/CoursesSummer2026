@@ -14,14 +14,9 @@ def BPETokenizer(input_path, vocab_size):
     for i in range(256):
         vocab.update({i: bytes([i])})
 
-    """ Open file and get text
     input_text = ""
     with open(input_path) as f:
         input_text += f.read()
-    """
-    input_text = """low low low low low
-    lower lower widest widest widest
-    newest newest newest newest newest newest"""
 
     # Pre-tokenization
     PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
@@ -33,50 +28,57 @@ def BPETokenizer(input_path, vocab_size):
         else:
             pretok_freq_table[tuple(pre_tok.group())] = 1
 
-    # Get all pair
-    print("Before:")
-    for k, v in pretok_freq_table.items():
-        print(k, end="")
-        print(" : " + str(v) + "\n")
-    print(len(pretok_freq_table))
-    # Compute BPE merges
-    freq = {}
-    for pretok in pretok_freq_table:
-        pretok_freq = pretok_freq_table[pretok]
-        for i in range(0, len(pretok) - 1):
-            # Get pair i and i+1
-            curr = pretok[i]
-            next = pretok[i + 1]
-            pair = (curr, next)
-            if pair in freq:
-                freq[pair] += pretok_freq
-            else:
-                freq[pair] = pretok_freq
+    while len(vocab) != vocab_size:
+        # Get all pair
+        """
+        print("Before:")
+        for k, v in pretok_freq_table.items():
+            print(k, end="")
+            print(" : " + str(v) + "\n")
+        """
+        # Compute BPE merges
+        freq = {}
+        for pretok in pretok_freq_table:
+            pretok_freq = pretok_freq_table[pretok]
+            for i in range(0, len(pretok) - 1):
+                # Get pair i and i+1
+                curr = pretok[i]
+                next = pretok[i + 1]
+                pair = (curr, next)
+                if pair in freq:
+                    freq[pair] += pretok_freq
+                else:
+                    freq[pair] = pretok_freq
 
-    sorted_freq = sorted(freq.keys(), key=lambda k: freq[k], reverse=True)
-    most_freq = sorted_freq[0]
-    print(most_freq)
-    for key in list(pretok_freq_table.keys()):
-        new_key = []
-        for i in range(0, len(key)):
-            print(key[i])
-            if key[i] == most_freq[0] and key[i + 1] == most_freq[1]:
-                new_key.append(str(most_freq[0] + most_freq[1]))
-                i += 2
-            else:
-                new_key.append(key[i])
+        sorted_freq = sorted(freq.keys(), key=lambda k: freq[k], reverse=True)
+        most_freq = sorted_freq[0]
+        # print(most_freq)
+        for key in list(pretok_freq_table.keys()):
+            new_key = []
+            for i in range(0, len(key)):
+                # print(str(i) + " : " + key[i])
+                # print(new_key)
+                if i < len(key) - 1 and key[i] == most_freq[0] and key[i + 1] == most_freq[1]:
+                    new_key.append(str(most_freq[0] + most_freq[1]))
+                elif i != 0 and key[i] == most_freq[1] and key[i - 1] == most_freq[0]:
+                    continue
+                else:
+                    new_key.append(key[i])
 
-        pretok_freq_table[tuple(new_key)] = pretok_freq_table.pop(key)
-        vocab[str(most_freq[0] + most_freq[1])] = len(vocab)
+            pretok_freq_table[tuple(new_key)] = pretok_freq_table.pop(key)
+            vocab[str(most_freq[0] + most_freq[1])] = len(vocab)
 
-    print("After running: ")
-    for k, v in pretok_freq_table.items():
-        print(k, end="")
-        print(" : " + str(v) + "\n")
+        """
+        print("After running: ")
+        for k, v in pretok_freq_table.items():
+            print(k, end="")
+            print(" : " + str(v) + "\n")
+        """
     return vocab
 
 
 dict = BPETokenizer("test.txt", 500)
+print(dict)
 """
 for k, v in dict.items():
     print(k, end="")
