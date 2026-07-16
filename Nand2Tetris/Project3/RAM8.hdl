@@ -1,0 +1,53 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/3/a/RAM8.hdl
+/**
+ * Memory of eight 16-bit registers.
+ * If load is asserted, the value of the register selected by
+ * address is set to in; Otherwise, the value does not change.
+ * The value of the selected register is emitted by out.
+ */
+CHIP RAM8 {
+    IN in[16], load, address[3];
+    OUT out[16];
+
+    PARTS:
+
+    DMux(in=load, sel=address[2], a=under4, b=over4);
+    DMux(in=under4, sel=address[1], a=under2, b=over2);
+    //DMux(in=under2, sel=address[0], a=under1, b=over1);
+    //DMux(in=over2, sel=address[0], a=under3, b=over3);
+    DMux(in=over4, sel=address[1], a=under6, b=over6);
+    //DMux(in=under6, sel=address[0], a=under7, b=over7);
+    //DMux(in=over6, sel=address[0], a=under5, b=over5);
+    Not(in=address[0], out=internal1);
+    And(a=under2, b=internal1, out=is0);
+    Register(in=in, load=is0, out=out0);
+    
+    And(a=under2, b=address[0], out=is1);
+    Register(in=in, load=is1, out=out1);
+    And(a=under4, b=over2, out=is2sub);
+    Not(in=address[0], out=is2sub2);
+    And(a=is2sub, b=is2sub2, out=is2);
+    Register(in=in, load=is2, out=out2);
+    And(a=under4, b=over2, out=is3sub);
+    And(a=is3sub, b=address[0], out=is3);
+    Register(in=in, load=is3, out=out3);
+    Not(in=address[1], out=is4sub);
+    And(a=over4, b=is4sub, out=is4sub1);
+    Not(in=address[0], out=is4sub2);
+    And(a=is4sub1, b=is4sub2, out=is4);
+    Register(in=in, load=is4, out=out4);
+    And(a=over4, b=under6, out=is5sub);
+    And(a=is5sub, b=address[0], out=is5);
+    Register(in=in, load=is5, out=out5);
+    Not(in=address[0], out=is6sub);
+    And(a=over6, b=is6sub, out=is6);
+    Register(in=in, load=is6, out=out6);
+    And(a=over6, b=address[0], out=is7);
+    Register(in=in, load=is7, out=out7);
+
+    Mux8Way16(a=out0, b=out1, c=out2, d=out3, e=out4, f=out5, g=out6, h=out7, sel=address, out=out);
+
+}
